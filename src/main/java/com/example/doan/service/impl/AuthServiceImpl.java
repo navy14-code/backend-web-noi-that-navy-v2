@@ -38,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final customerUserServiceImpl customerUserService;
 
     @Override
-    public void sentLoginOtp(String email, USER_ROLE role) throws Exception {
+    public void sentLoginOtp(String email,String password, USER_ROLE role) throws Exception {
         String SIGNING_PREFIX = "signing_";
 
         if (email.startsWith(SIGNING_PREFIX)) {

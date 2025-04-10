@@ -39,7 +39,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse> sendOtpHandle(
             @RequestBody LoginOtpRequest req) throws Exception {
 
-        authService.sentLoginOtp(req.getEmail(), req.getRole());
+        authService.sentLoginOtp(req.getEmail(), req.getPassword(), req.getRole());
 
         ApiResponse res = new ApiResponse();
 

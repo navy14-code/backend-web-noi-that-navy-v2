@@ -6,7 +6,7 @@ import com.example.doan.response.AuthResponse;
 import com.example.doan.request.SignupRequest;
 
 public interface AuthService {
-    void sentLoginOtp(String  email, USER_ROLE role) throws Exception;
+    void sentLoginOtp(String  email,String password, USER_ROLE role) throws Exception;
     String createUser(SignupRequest req) throws Exception;
     AuthResponse signing(LoginRequest req) throws Exception;
 }
