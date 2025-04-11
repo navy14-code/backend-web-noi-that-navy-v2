@@ -3,7 +3,6 @@ package com.example.doan.request;
 import lombok.Data;
 
 @Data
-public class LoginRequest {
+public class ForgerPasswordRequest {
     private String email;
-    private String otp;
 }

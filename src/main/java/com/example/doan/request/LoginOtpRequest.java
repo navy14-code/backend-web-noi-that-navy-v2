@@ -1,7 +1,7 @@
 package com.example.doan.request;
 
 import com.example.doan.doman.USER_ROLE;
-import lombok.Data;
+import lombok.*;
 
 @Data
 public class LoginOtpRequest {
