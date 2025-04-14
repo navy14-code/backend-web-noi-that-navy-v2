@@ -2,17 +2,15 @@ package com.example.doan.controller;
 
 import com.example.doan.doman.USER_ROLE;
 import com.example.doan.repository.UserRepository;
-import com.example.doan.request.*;
+import com.example.doan.repository.VerificationCodeRepository;
+import com.example.doan.request.auth.*;
 import com.example.doan.response.ApiResponse;
 import com.example.doan.response.AuthResponse;
 import com.example.doan.service.AuthService;
+import com.example.doan.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth/")
@@ -20,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final UserRepository userRepository;
     private final AuthService authService;
+    private final UserService userService;
+    private final VerificationCodeRepository verificationCodeRepository;
 
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> createUserHandle(@RequestBody SignupRequest req) throws Exception {
@@ -46,10 +46,11 @@ public class AuthController {
             return  ResponseEntity.ok(res);
     }
 
-    @PostMapping("/signing")
+    @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginHandle(@RequestBody LoginRequest req) throws Exception {
 
-        AuthResponse authResponse = authService.signing(req);
+
+        AuthResponse authResponse = authService.login(req);
 
         return  ResponseEntity.ok(authResponse);
     }
@@ -78,5 +79,6 @@ public class AuthController {
 
             return  ResponseEntity.ok(res);
     }
+
 
 }

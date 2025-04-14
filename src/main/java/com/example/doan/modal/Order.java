@@ -43,7 +43,7 @@ public class Order {
 
     private Integer discount;
 
-    private OrderStatus orderStutus;
+    private OrderStatus orderStatus;
 
     private int totalItem;
 

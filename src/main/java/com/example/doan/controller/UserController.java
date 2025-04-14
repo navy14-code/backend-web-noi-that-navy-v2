@@ -29,13 +29,13 @@ public class UserController {
         return  ResponseEntity.ok(user);
     }
 
-//    @PostMapping("/create")
-//    public ResponseEntity<User> creatUser( @RequestBody User user) throws Exception {
-//
-//            User createdUser = userService.createUser(user);
-//
-//            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
-//    }
+    @PostMapping("/create")
+    public ResponseEntity<User> creatUser( @RequestBody User user) throws Exception {
+
+            User createdUser = userService.createUser(user);
+
+            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
 
     @GetMapping("{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) throws Exception {
@@ -54,12 +54,6 @@ public class UserController {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
-//    @GetMapping()
-//    public ResponseEntity<List<User>> getAllUsers(
-//            @RequestParam(required = false)AccountStatus status){
-//        List<User> users = userService.getAllUsers(status);
-//        return ResponseEntity.ok(users);
-//    }
 
     @PatchMapping("/update")
     public ResponseEntity<User> updateUser(@RequestHeader("Authorization") String jwt, @RequestBody UserRequest req) throws Exception {

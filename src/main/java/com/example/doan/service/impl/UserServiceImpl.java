@@ -41,35 +41,36 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-//    @Override
-//    public User createUser(User user) throws Exception {
-//        // Kiểm tra email đã tồn tại chưa
-//        User userExists = userRepository.findByEmail(user.getEmail());
-//        if (userExists != null) {
-//            throw new Exception("Người dùng đã tồn tại, vui lòng sử dụng email khác.");
-//        }
-//
-//        // Lưu địa chỉ
-//        Set<Address> savedAddresses = new HashSet<>();
-//        if (user.getAddresses() != null) {
-//            for (Address address : user.getAddresses()) {
-//                address.setUser(user); // Gán lại quan hệ
-//                savedAddresses.add(addressRepository.save(address));
-//            }
-//        }
-//
-//        // Tạo user mới
-//        User newUser = new User();
-//        newUser.setEmail(user.getEmail());
-//        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
-//        newUser.setFullName(user.getFullName());
-//        newUser.setPhone(user.getPhone());
-//        newUser.setRole(user.getRole());
-//        newUser.setAddresses(savedAddresses);
-//
-//        // Lưu user
-//        return userRepository.save(newUser);
-//    }
+    @Override
+    public User createUser(User user) throws Exception {
+        // Kiểm tra email đã tồn tại chưa
+        User userExists = userRepository.findByEmail(user.getEmail());
+        if (userExists != null) {
+            throw new Exception("Người dùng đã tồn tại, vui lòng sử dụng email khác.");
+        }
+
+        // Lưu địa chỉ
+        Set<Address> savedAddresses = new HashSet<>();
+        if (user.getAddresses() != null) {
+            for (Address address : user.getAddresses()) {
+                address.setUser(user); // Gán lại quan hệ
+                savedAddresses.add(addressRepository.save(address));
+            }
+        }
+
+        // Tạo user mới
+        User newUser = new User();
+        newUser.setEmail(user.getEmail());
+        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        newUser.setFullName(user.getFullName());
+        newUser.setPhone(user.getPhone());
+        newUser.setRole(user.getRole());
+        newUser.setAddresses(savedAddresses);
+        newUser.setEmailVerified(true);
+
+        // Lưu user
+        return userRepository.save(newUser);
+    }
 
 
     @Override
@@ -130,4 +131,11 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+//    @Override
+//    public User verifyEmail(String email, String otp) throws Exception {
+//        User user = getUserByEmail(email);
+//        user.setEmailVerified(true);
+//        return userRepository.save(user);
+//    }
 }

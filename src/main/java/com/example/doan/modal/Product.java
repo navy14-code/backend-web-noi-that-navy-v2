@@ -37,8 +37,8 @@ public class Product {
 
     private String brand;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductImage> images = new ArrayList<>();
+    @ElementCollection
+    private List<String> images = new ArrayList<>();
 
     private int numRatings;
 

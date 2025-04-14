@@ -6,8 +6,8 @@ import com.example.doan.modal.User;
 import com.example.doan.modal.VerificationCode;
 import com.example.doan.repository.VerificationCodeRepository;
 import com.example.doan.repository.UserRepository;
-import com.example.doan.request.LoginRequest;
-import com.example.doan.request.SignupRequest;
+import com.example.doan.request.auth.LoginRequest;
+import com.example.doan.request.auth.SignupRequest;
 import com.example.doan.response.AuthResponse;
 import com.example.doan.service.AuthService;
 import com.example.doan.service.EmailService;
@@ -46,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = userRepository.findByEmail(email);
+
         if (user == null) {
             throw new Exception("User không tồn tại với email đã cung cấp");
         }
@@ -73,12 +74,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String createUser(SignupRequest req) throws Exception {
-
-//        VerificationCode verificationCode = verificationCodeRepository.findByEmail(req.getEmail());
-//
-//        if (verificationCode == null || !verificationCode.getOtp().equals(req.getOtp())) {
-//            throw new Exception("wrong otp!");
-//        }
         User user = userRepository.findByEmail(req.getEmail());
 
         if (user == null) {
@@ -106,11 +101,19 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse signing(LoginRequest req) throws Exception {
+    public AuthResponse login(LoginRequest req) throws Exception {
         String username= req.getEmail();
         String otp= req.getOtp();
 
+
         Authentication authentication = authenticate(username, otp);
+        User user = userRepository.findByEmail(username);
+
+        if (user != null && !user.isEmailVerified()) {
+            user.setEmailVerified(true);
+            userRepository.save(user);
+        }
+
         String token = jwtProvider.generateToken(authentication);
         AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(token);

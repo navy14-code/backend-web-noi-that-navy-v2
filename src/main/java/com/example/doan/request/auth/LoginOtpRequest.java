@@ -1,4 +1,4 @@
-package com.example.doan.request;
+package com.example.doan.request.auth;
 
 import com.example.doan.doman.USER_ROLE;
 import lombok.*;
