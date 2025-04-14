@@ -29,7 +29,6 @@ public class Order {
     @ManyToOne
     private User user;
 
-    private long sellerId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> oderItems = new ArrayList<>();
@@ -37,9 +36,9 @@ public class Order {
     @ManyToOne
     private Address shippingAddress;
 
-    private double discountPrice;
+    private double totalDiscountPrice;
 
-    private Integer price;
+    private Integer totalPrice;
 
     private Integer discount;
 

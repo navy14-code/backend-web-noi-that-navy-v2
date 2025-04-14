@@ -7,6 +7,7 @@ import com.example.doan.request.UserRequest;
 import java.util.List;
 
 public interface UserService {
+    User findUserByJwtToken(String jwt) throws Exception;
     User getUserProfile(String jwt) throws Exception;
     User getUserByEmail(String email) throws Exception;
     User createUser(User user) throws Exception;

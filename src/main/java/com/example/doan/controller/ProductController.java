@@ -18,7 +18,7 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    
+
     @GetMapping("/{productId}")
     public ResponseEntity<Product> findProductById(@PathVariable Long productId) throws ProductException {
         Product product = productService.findProductById(productId);

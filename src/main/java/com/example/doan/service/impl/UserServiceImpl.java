@@ -24,6 +24,15 @@ public class UserServiceImpl implements UserService {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final AddressRepository addressRepository;
+
+
+    @Override
+    public User findUserByJwtToken(String jwt) throws Exception {
+         String email= jwtProvider.getEmailFromJwtToken(jwt);
+
+        return this.getUserByEmail(email);
+    }
+
     @Override
     public User getUserProfile(String jwt) throws Exception {
 
@@ -132,10 +141,4 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
-//    @Override
-//    public User verifyEmail(String email, String otp) throws Exception {
-//        User user = getUserByEmail(email);
-//        user.setEmailVerified(true);
-//        return userRepository.save(user);
-//    }
 }
