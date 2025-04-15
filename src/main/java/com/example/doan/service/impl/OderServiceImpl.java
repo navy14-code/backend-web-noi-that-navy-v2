@@ -1,11 +1,14 @@
 package com.example.doan.service.impl;
 
 import com.example.doan.doman.OrderStatus;
+import com.example.doan.doman.PaymentMethod;
+import com.example.doan.doman.PaymentStatus;
 import com.example.doan.modal.*;
 import com.example.doan.repository.AddressRepository;
 import com.example.doan.repository.OrderItemRepository;
 import com.example.doan.repository.OrderRepository;
 import com.example.doan.service.OrderService;
+import com.example.doan.service.VNPayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,24 +23,25 @@ public class OderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
 
     @Override
-    public Set<Order> createOrder(User user, Address shippingAddress, Cart cart) {
+    public Set<Order> createOrder(User user, Address shippingAddress, Cart cart, PaymentMethod paymentMethod) {
+        // Nếu địa chỉ chưa được lưu thì thêm vào
         if(!user.getAddresses().contains(shippingAddress)) {
             user.getAddresses().add(shippingAddress);
         }
         Address address = addressRepository.save(shippingAddress);
-
-        Map<Long, List<CartItem>> itemsBySeller= cart.getCartItems().stream()
+        // Nhóm các sản phẩm theo người bán (userId)
+        Map<Long, List<CartItem>> itemsByUser= cart.getCartItems().stream()
                 .collect(Collectors.groupingBy(item -> item.getProduct()
                         .getUser().getId()));
         Set<Order> orders = new HashSet<>();
-        for(Map.Entry<Long, List<CartItem>> entry : itemsBySeller.entrySet()) {
-            Long sellerId = entry.getKey();
+        // Lặp qua các nhóm sản phẩm theo người bán
+        for(Map.Entry<Long, List<CartItem>> entry : itemsByUser.entrySet()) {
+            Long userId = entry.getKey();
             List<CartItem> items = entry.getValue();
-
-            int totalOrderPrice=items.stream().mapToInt(
-                    CartItem::getDiscountPrice
-            ).sum();
+            // Tính tổng giá trị đơn hàng và số lượng sản phẩm
+            int totalOrderPrice=items.stream().mapToInt(CartItem::getDiscountPrice).sum();
             int totalItem= items.stream().mapToInt(CartItem::getQuantity).sum();
+
             Order createdOrder = new Order();
             createdOrder.setUser(user);
             createdOrder.setTotalPrice(totalOrderPrice);
@@ -46,9 +50,24 @@ public class OderServiceImpl implements OrderService {
             createdOrder.setShippingAddress(address);
             createdOrder.setOrderStatus(OrderStatus.PENDING);
 
+            // Xử lý phương thức thanh toán COD
+            if (paymentMethod == PaymentMethod.COD) {
+                createdOrder.setPaymentStatus(PaymentStatus.PENDING); // COD là chưa thanh toán
+            }
+//            else if (paymentMethod == PaymentMethod.VNPAY) {
+//                VNPayService vnPayService = new VNPayService();
+//                String paymentUrl = vnPayService.createPaymentUrl(createdOrder);
+//                createdOrder.setPaymentStatus(PaymentStatus.PENDING); // Thanh toán đang chờ
+//                createdOrder.setPaymentUrl(paymentUrl); // Lưu URL thanh toán
+//            }
+            else {
+                throw new IllegalArgumentException("Phương thức thanh toán không hợp lệ");
+            }
+//            // Lưu đơn hàng vào cơ sở dữ liệu
             Order savedOrder = orderRepository.save(createdOrder);
             orders.add(savedOrder);
 
+            // Lưu các sản phẩm trong giỏ hàng thành OrderItem
             List<OrderItem> orderItems= new ArrayList<>();
             for (CartItem item : items) {
                 OrderItem orderItem = new OrderItem();
@@ -80,7 +99,7 @@ public class OderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> getAllOrders() {
+    public List<Order> getAllOrders(long userId) {
         return orderRepository.findAll();
     }
 
@@ -105,5 +124,10 @@ public class OderServiceImpl implements OrderService {
     @Override
     public OrderItem getOrderItemById(long id) throws Exception {
         return orderItemRepository.findById(id).orElseThrow(()-> new Exception("Đơn hàng không tồn tại..."));
+    }
+
+    @Override
+    public Order saveOrder(Order order) {
+        return orderRepository.save(order);
     }
 }

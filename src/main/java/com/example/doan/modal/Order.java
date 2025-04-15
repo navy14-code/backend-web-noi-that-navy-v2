@@ -1,6 +1,7 @@
 package com.example.doan.modal;
 
 import com.example.doan.doman.OrderStatus;
+import com.example.doan.doman.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,6 +44,8 @@ public class Order {
     private Integer discount;
 
     private OrderStatus orderStatus;
+
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
     private int totalItem;
 

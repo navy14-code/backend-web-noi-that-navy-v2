@@ -1,18 +1,22 @@
 package com.example.doan.controller;
 
+import com.example.doan.doman.OrderStatus;
 import com.example.doan.doman.PaymentMethod;
+import com.example.doan.doman.PaymentStatus;
 import com.example.doan.doman.USER_ROLE;
 import com.example.doan.modal.*;
 import com.example.doan.response.PaymentResponse;
 import com.example.doan.service.CartService;
 import com.example.doan.service.OrderService;
 import com.example.doan.service.UserService;
+import com.example.doan.service.VNPayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -30,28 +34,62 @@ public class OrderController {
             @RequestHeader("Authorization") String jwt) throws Exception {
 
         User user = userService.findUserByJwtToken(jwt);
-
         Cart cart = cartService.findUserCart(user);
 
-        Set<Order> orders = orderService.createOrder(user, shippingAddress, cart);
-        // 4. Xử lý theo phương thức thanh toán
-        PaymentResponse res = new PaymentResponse();
+        Set<Order> orders = orderService.createOrder(user, shippingAddress, cart, paymentMethod);
 
-//        if (paymentMethod.equals(PaymentMethod.COD)) {
-//            // Thanh toán khi nhận hàng
-//            res = new PaymentResponse("Đặt hàng thành công. Thanh toán khi nhận hàng.", null);
+        PaymentResponse res;
+        if (paymentMethod == PaymentMethod.COD) {
+            // Đặt trạng thái đơn hàng là "Chờ xử lý"
+            for (Order order : orders) {
+                order.setOrderStatus(OrderStatus.PENDING);
+                order.setPaymentStatus(PaymentStatus.PENDING); // COD là chưa thanh toán
+                orderService.saveOrder(order); // Lưu đơn hàng vào cơ sở dữ liệu
+            }
+            // Trả về thông báo thành công cho thanh toán COD
+            res = new PaymentResponse("Đặt hàng thành công. Thanh toán khi nhận hàng.", null); // Truyền giá trị đúng cho URL
+        }
+//        else if (paymentMethod == PaymentMethod.VNPAY) {
+//            // Tạo URL thanh toán VNPAY
+//            for (Order order : orders) {
+//                order.setOrderStatus(OrderStatus.PENDING); // Đặt trạng thái đơn hàng là "Chờ xử lý"
+//                order.setPaymentStatus(PaymentStatus.PENDING); // Thanh toán chờ xử lý
 //
-//        } else if (paymentMethod.equals(PaymentMethod.VNPAY)) {
-//            // Thanh toán qua VNPAY
-//            PaymentOrder paymentOrder = paymentService.createVNPayOrder(user, orders);
-//            response = new PaymentResponse("Vui lòng thanh toán qua VNPAY", paymentOrder.getPaymentUrl());
+//                // Tạo URL thanh toán từ dịch vụ VNPAY
+//                String paymentUrl = vnPayService.createPaymentUrl(order); // Giả sử bạn có service `vnPayService` để tạo URL thanh toán
 //
-//        } else {
-//            throw new IllegalArgumentException("Phương thức thanh toán không hỗ trợ");
+//                order.setPaymentUrl(paymentUrl); // Lưu URL thanh toán vào đơn hàng
+//                orderService.saveOrder(order); // Lưu đơn hàng vào cơ sở dữ liệu
+//            }
+//            // Trả về URL thanh toán VNPAY
+//            res = new PaymentResponse("Vui lòng thanh toán qua VNPAY.", paymentUrl); // Trả về URL thanh toán VNPAY
 //        }
+        // Nếu phương thức thanh toán không hợp lệ, trả về lỗi
+        else {
+            res = new PaymentResponse("Phương thức thanh toán không hợp lệ", null);
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST); // Trả về mã lỗi 400
+        }
 
         return new ResponseEntity<>(res, HttpStatus.OK);
+
     }
+//    @PostMapping("/vnpay-return")
+//    public ResponseEntity<String> handleVNPayCallback(@RequestParam Map<String, String> params) throws Exception {
+//        String vnp_ResponseCode = params.get("vnp_ResponseCode");
+//        Long orderId = Long.valueOf(params.get("vnp_TxnRef")); // Lấy ID đơn hàng từ callback
+//
+//        Order order = orderService.findOrderById(orderId);
+//        if ("00".equals(vnp_ResponseCode)) { // "00" là mã phản hồi thành công
+//            order.setPaymentStatus(PaymentStatus.PROCESSING);
+//            order.setOrderStatus(OrderStatus.CONFIRMED);
+//        } else {
+//            order.setPaymentStatus(PaymentStatus.FAILED);
+//        }
+//        orderService.saveOrder(order); // Lưu thay đổi vào DB
+//        return ResponseEntity.ok("Payment status updated.");
+//    }
+
+
     @GetMapping("/user")
     public ResponseEntity<List<Order>> userOrdersHistoryHandler(
             @RequestHeader("Authorization") String jwt) throws Exception {
