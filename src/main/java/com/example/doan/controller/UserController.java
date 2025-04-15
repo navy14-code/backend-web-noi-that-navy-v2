@@ -45,7 +45,7 @@ public class UserController {
 
     @GetMapping("/customers")
     public ResponseEntity<List<User>> getCustomers() {
-        List<User> customers = userRepository.findByRole(USER_ROLE.ROLE_CUSTOMER);
+        List<User> customers = userRepository.getByRole(USER_ROLE.ROLE_CUSTOMER);
         return ResponseEntity.ok(customers);
     }
 

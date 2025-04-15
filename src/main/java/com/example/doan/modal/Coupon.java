@@ -14,7 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @EqualsAndHashCode
 @Table(name = "coupen")
-public class Coupen {
+public class Coupon {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
 
@@ -23,7 +23,7 @@ public class Coupen {
 
     private String code; // mã giảm giá
 
-    private String discountPercentage; //% giảm giá
+    private int discountPercentage; //% giảm giá
 
     private LocalDate validityStartDate; // ngày bắt đầu
 

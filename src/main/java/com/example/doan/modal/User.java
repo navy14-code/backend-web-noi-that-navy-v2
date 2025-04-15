@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.boot.autoconfigure.amqp.RabbitConnectionDetails;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -46,7 +45,7 @@ public class User {
 
     @ManyToMany
     @JsonIgnore
-    private Set<Coupen> usedCoupons = new HashSet<>();
+    private Set<Coupon> usedCoupons = new HashSet<>();
 
     private boolean isEmailVerified = false;
 
