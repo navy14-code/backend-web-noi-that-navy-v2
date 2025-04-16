@@ -52,7 +52,7 @@ public class OderServiceImpl implements OrderService {
 
             // Xử lý phương thức thanh toán COD
             if (paymentMethod == PaymentMethod.COD) {
-                createdOrder.setPaymentStatus(PaymentStatus.PENDING); // COD là chưa thanh toán
+                createdOrder.setPaymentStatus(PaymentStatus.NOT_PAID); // COD là chưa thanh toán
             }
 //            else if (paymentMethod == PaymentMethod.VNPAY) {
 //                VNPayService vnPayService = new VNPayService();

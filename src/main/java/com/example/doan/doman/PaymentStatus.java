@@ -1,8 +1,6 @@
 package com.example.doan.doman;
 
 public enum PaymentStatus {
-    PENDING,
-    PROCESSING,
-    COMPLETED,
-    FAILED,
+    NOT_PAID,   // Chưa thanh toán
+    COMPLETED
 }

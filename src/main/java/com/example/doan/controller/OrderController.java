@@ -6,10 +6,7 @@ import com.example.doan.doman.PaymentStatus;
 import com.example.doan.doman.USER_ROLE;
 import com.example.doan.modal.*;
 import com.example.doan.response.PaymentResponse;
-import com.example.doan.service.CartService;
-import com.example.doan.service.OrderService;
-import com.example.doan.service.UserService;
-import com.example.doan.service.VNPayService;
+import com.example.doan.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +23,7 @@ public class OrderController {
     private final OrderService orderService;
     private final UserService userService;
     private final CartService cartService;
+    private final ReportService reportService;
 
     @PostMapping()
     public ResponseEntity<PaymentResponse> createOrderHandler(
@@ -43,7 +41,7 @@ public class OrderController {
             // Đặt trạng thái đơn hàng là "Chờ xử lý"
             for (Order order : orders) {
                 order.setOrderStatus(OrderStatus.PENDING);
-                order.setPaymentStatus(PaymentStatus.PENDING); // COD là chưa thanh toán
+                order.setPaymentStatus(PaymentStatus.NOT_PAID);
                 orderService.saveOrder(order); // Lưu đơn hàng vào cơ sở dữ liệu
             }
             // Trả về thông báo thành công cho thanh toán COD
@@ -97,6 +95,7 @@ public class OrderController {
         List<Order> orders= orderService.userOrderHistory(user.getId());
         return new ResponseEntity<>(orders, HttpStatus.ACCEPTED);
     }
+
     @GetMapping("/item/{orderItemID}")
     public ResponseEntity<OrderItem> getOrderItemById(
             @PathVariable Long orderItemID,
@@ -106,6 +105,7 @@ public class OrderController {
 
         return new ResponseEntity<>(orderItem, HttpStatus.ACCEPTED);
     }
+
     @PutMapping("/{orderId}/cancel")
     public ResponseEntity<Order> cancelOrder(
             @PathVariable Long orderId,
@@ -118,13 +118,13 @@ public class OrderController {
 
         Order order = orderService.cancelOrder(orderId, user);
 
-//        Report report = reportService.getReport(seller);
-//        report.setCancelledOrders(report.getCancelledOrders() + 1);
-//        report.setTotalRefunds(report.getTotalRefunds() + order.getTotalDiscountPrice());
-//        reportService.updateReport(report);
+        Report report = reportService.getReport(user);
+
+        report.setCanceledOrders(report.getCanceledOrders()+1);
+        report.setTotalRefunds(report.getTotalRefunds()+ order.getTotalDiscountPrice());
+        reportService.updateReport(report);
 
         return ResponseEntity.ok(order);
     }
-
 
 }

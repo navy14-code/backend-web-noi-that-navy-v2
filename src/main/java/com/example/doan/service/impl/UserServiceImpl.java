@@ -1,6 +1,7 @@
 package com.example.doan.service.impl;
 
 import com.example.doan.config.JwtProvider;
+import com.example.doan.doman.USER_ROLE;
 import com.example.doan.exceptions.UserException;
 import com.example.doan.modal.Address;
 import com.example.doan.modal.User;
@@ -86,12 +87,7 @@ public class UserServiceImpl implements UserService {
     public User getUserById(Long id) throws UserException {
         return userRepository.findById(id).orElseThrow(()-> new UserException("Người dùng không tồn tại với id" + id));
     }
-    
 
-//    @Override
-//    public List<User> getAllUsers(AccountStatus status) {
-//        return userRepository.findByAccountStatus(status);
-//    }
 
     @Override
     public User updateUser(Long id, UserRequest req) throws Exception {
@@ -139,6 +135,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    @Override
+    public List<User> getAllCustomers(USER_ROLE role) {
+        return userRepository.getByRole(USER_ROLE.ROLE_CUSTOMER);
     }
 
 }

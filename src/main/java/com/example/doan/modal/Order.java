@@ -37,15 +37,15 @@ public class Order {
     @ManyToOne
     private Address shippingAddress;
 
-    private double totalDiscountPrice;
+    private Integer totalDiscountPrice;
 
-    private Integer totalPrice;
+    private double totalPrice;
 
     private Integer discount;
 
     private OrderStatus orderStatus;
 
-    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+    private PaymentStatus paymentStatus = PaymentStatus.NOT_PAID;
 
     private int totalItem;
 

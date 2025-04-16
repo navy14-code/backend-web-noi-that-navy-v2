@@ -10,6 +10,4 @@ import java.util.List;
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByEmail(String email);
     List<User> getByRole(USER_ROLE role);
-//    List<User> findByAccountStatus(AccountStatus status);
-
 }
