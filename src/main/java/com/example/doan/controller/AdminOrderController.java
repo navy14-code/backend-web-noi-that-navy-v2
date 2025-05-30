@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/orders")
+@RequestMapping("/admin/orders")
 public class AdminOrderController {
     private final OrderService orderService;
     private final UserService userService;
@@ -29,7 +29,7 @@ public class AdminOrderController {
         return new ResponseEntity<>(orders, HttpStatus.ACCEPTED);
     }
 
-    @PatchMapping("/{orderId}/status/{orderStats}")
+    @PatchMapping("/{orderId}/status/{orderStatus}")
     public ResponseEntity<Order> updateOrderHandle(
             @RequestHeader("Authorization") String jwt,
             @PathVariable Long orderId,

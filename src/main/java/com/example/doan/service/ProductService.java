@@ -1,5 +1,6 @@
 package com.example.doan.service;
 
+import com.example.doan.exceptions.DataNotFoundException;
 import com.example.doan.exceptions.ProductException;
 import com.example.doan.modal.Product;
 import com.example.doan.modal.User;
@@ -9,7 +10,7 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface ProductService {
-    Product createProduct(CreateProductRequest request, User user) ;
+    Product createProduct(CreateProductRequest request, User user) throws DataNotFoundException;
 
     Product updateProduct(Long productId, Product product) throws ProductException;
 
@@ -29,5 +30,7 @@ public interface ProductService {
             Integer minDiscount,
             String sort,
             String stock,
-            Integer pageNumber);
+            Integer pageNumber
+
+    );
 }

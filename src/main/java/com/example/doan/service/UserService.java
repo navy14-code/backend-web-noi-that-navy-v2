@@ -4,6 +4,8 @@ import com.example.doan.doman.USER_ROLE;
 import com.example.doan.exceptions.UserException;
 import com.example.doan.modal.User;
 import com.example.doan.request.UserRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -16,5 +18,8 @@ public interface UserService {
     User updateUser(Long id, UserRequest req) throws Exception;
     void deleteUser(Long id) throws Exception;
     List<User> getAllUsers();
-    List<User> getAllCustomers(USER_ROLE role);
+    List<User> getAllCustomers(USER_ROLE role );
+    Page<User> findAllByRoleCustomer(USER_ROLE role, int page, int size);
+
+
 }

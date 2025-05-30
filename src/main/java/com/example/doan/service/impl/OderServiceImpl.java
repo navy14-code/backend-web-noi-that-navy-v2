@@ -5,10 +5,10 @@ import com.example.doan.doman.PaymentMethod;
 import com.example.doan.doman.PaymentStatus;
 import com.example.doan.modal.*;
 import com.example.doan.repository.AddressRepository;
+import com.example.doan.repository.CartRepository;
 import com.example.doan.repository.OrderItemRepository;
 import com.example.doan.repository.OrderRepository;
 import com.example.doan.service.OrderService;
-import com.example.doan.service.VNPayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +21,7 @@ public class OderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final AddressRepository addressRepository;
     private final OrderItemRepository orderItemRepository;
+    private final CartRepository cartRepository;
 
     @Override
     public Set<Order> createOrder(User user, Address shippingAddress, Cart cart, PaymentMethod paymentMethod) {
@@ -54,12 +55,10 @@ public class OderServiceImpl implements OrderService {
             if (paymentMethod == PaymentMethod.COD) {
                 createdOrder.setPaymentStatus(PaymentStatus.NOT_PAID); // COD là chưa thanh toán
             }
-//            else if (paymentMethod == PaymentMethod.VNPAY) {
-//                VNPayService vnPayService = new VNPayService();
-//                String paymentUrl = vnPayService.createPaymentUrl(createdOrder);
-//                createdOrder.setPaymentStatus(PaymentStatus.PENDING); // Thanh toán đang chờ
-//                createdOrder.setPaymentUrl(paymentUrl); // Lưu URL thanh toán
-//            }
+            else if (paymentMethod == PaymentMethod.VNPAY) {
+                createdOrder.setPaymentStatus(PaymentStatus.NOT_PAID);
+                createdOrder.setOrderStatus(OrderStatus.PENDING);
+            }
             else {
                 throw new IllegalArgumentException("Phương thức thanh toán không hợp lệ");
             }
@@ -84,6 +83,8 @@ public class OderServiceImpl implements OrderService {
                 orderItems.add(savedOrderItem);
 
             }
+//            cart.getCartItems().clear();
+//            cartRepository.save(cart);
         }
         return orders;
     }

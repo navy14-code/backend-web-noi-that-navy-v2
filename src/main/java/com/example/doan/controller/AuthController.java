@@ -1,6 +1,8 @@
 package com.example.doan.controller;
 
 import com.example.doan.doman.USER_ROLE;
+import com.example.doan.modal.User;
+import com.example.doan.modal.VerificationCode;
 import com.example.doan.repository.UserRepository;
 import com.example.doan.repository.VerificationCodeRepository;
 import com.example.doan.request.auth.*;
@@ -9,11 +11,13 @@ import com.example.doan.response.AuthResponse;
 import com.example.doan.service.AuthService;
 import com.example.doan.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
-@RequestMapping("/auth/")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final UserRepository userRepository;
@@ -80,5 +84,16 @@ public class AuthController {
             return  ResponseEntity.ok(res);
     }
 
+    @PostMapping("/sent/sign-otp")
+    public ResponseEntity<ApiResponse> sendSignOtpHandle(@RequestBody SignOtpRequest req) throws Exception {
+
+        authService.sentSignOtp(req.getEmail(),req.getRole());
+
+        ApiResponse res = new ApiResponse();
+
+        res.setMessage("Gửi mã OTP thành công");
+
+        return  ResponseEntity.ok(res);
+    }
 
 }

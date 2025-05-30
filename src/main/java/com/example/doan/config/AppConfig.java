@@ -27,7 +27,7 @@ public class AppConfig {
                 )).authorizeHttpRequests(
                         authorize -> authorize
                                 .requestMatchers("/api/**").authenticated()
-                                .requestMatchers("/api/products/*/reivew").permitAll()
+                                .requestMatchers("/api/products/*/reivews").permitAll()
                                 .anyRequest().permitAll()
                 ).addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
                 .csrf(csrf->csrf.disable())
@@ -40,7 +40,7 @@ public class AppConfig {
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                 CorsConfiguration cfg = new CorsConfiguration();
-                cfg.setAllowedOrigins(Collections.singletonList("*"));
+                cfg.setAllowedOrigins(Collections.singletonList("http://localhost:3005"));
                 cfg.setAllowedMethods(Collections.singletonList("*"));
                 cfg.setAllowedHeaders(Collections.singletonList("*"));
                 cfg.setAllowCredentials(true);

@@ -60,10 +60,10 @@ public class PaymentServiceImpl implements PaymentService {
                 }
                 paymentOrder.setStatus(PaymentOrderStatus.PENDING); // Đơn hàng chờ thanh toán (COD)
             }
-//            else if (paymentOrder.getPaymentMethod() == PaymentMethod.VNPAY) {
-//                // Xử lý thanh toán VNPay: Đơn hàng chờ thanh toán qua cổng VNPay
-//                paymentOrder.setStatus(PaymentOrderStatus.PENDING); // Giữ trạng thái chờ thanh toán
-//            }
+            else if (paymentOrder.getPaymentMethod() == PaymentMethod.VNPAY) {
+                // Xử lý thanh toán VNPay: Đơn hàng chờ thanh toán qua cổng VNPay
+                paymentOrder.setStatus(PaymentOrderStatus.PENDING); // Giữ trạng thái chờ thanh toán
+            }
 
             // Lưu trạng thái PaymentOrder
             paymentOrderRepository.save(paymentOrder);
@@ -74,13 +74,6 @@ public class PaymentServiceImpl implements PaymentService {
             // Nếu trạng thái không phải PENDING, không thực hiện gì
             return false;
         }
-    }
-
-    @Override
-    public String createVNPayPaymentLink(User user, Long amount, Long orderId) {
-//        String paymentUrl = vnPayService.createPaymentUrl(amount, orderId, user);
-//        return paymentUrl;
-        return null;
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.example.doan.repository.UserRepository;
 import com.example.doan.request.UserRequest;
 import com.example.doan.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -70,6 +71,15 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/customer")
+    public ResponseEntity<Page<User>> getAllCustomers(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        Page<User> customers = userService.findAllByRoleCustomer(USER_ROLE.ROLE_CUSTOMER, page, size);
+        return ResponseEntity.ok(customers);
+    }
+
 }
 
 

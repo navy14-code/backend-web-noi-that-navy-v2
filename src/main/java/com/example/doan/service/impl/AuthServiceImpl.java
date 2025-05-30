@@ -2,8 +2,10 @@ package com.example.doan.service.impl;
 
 import com.example.doan.config.JwtProvider;
 import com.example.doan.doman.USER_ROLE;
+import com.example.doan.modal.Cart;
 import com.example.doan.modal.User;
 import com.example.doan.modal.VerificationCode;
+import com.example.doan.repository.CartRepository;
 import com.example.doan.repository.VerificationCodeRepository;
 import com.example.doan.repository.UserRepository;
 import com.example.doan.request.auth.LoginRequest;
@@ -36,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final VerificationCodeRepository verificationCodeRepository;
     private final UserRepository userRepository;
     private final CustomerUserServiceImpl customerUserService;
+    private final CartRepository cartRepository;
 
     @Override
     public void sentLoginOtp(String email, String password, USER_ROLE role) throws Exception {
@@ -76,6 +79,7 @@ public class AuthServiceImpl implements AuthService {
     public String createUser(SignupRequest req) throws Exception {
         User user = userRepository.findByEmail(req.getEmail());
 
+
         if (user == null) {
             User createUser = new User();
             createUser.setEmail(req.getEmail());
@@ -86,10 +90,11 @@ public class AuthServiceImpl implements AuthService {
 
             user= userRepository.save(createUser);
 
-//            Cart cart = new Cart();
-//            cart.setUser(user);
-//            cartReponstitory.save(cart);
+            Cart cart = new Cart();
+            cart.setUser(user);
+            cartRepository.save(cart);
         }
+
         List<GrantedAuthority> authorities= new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(USER_ROLE.ROLE_CUSTOMER.toString()));
 
@@ -102,12 +107,20 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest req) throws Exception {
-        String username= req.getEmail();
-        String otp= req.getOtp();
+        String username = req.getEmail();
+        String otp = req.getOtp();
+//        String password = req.getPassword();
 
+        User user = userRepository.findByEmail(username);
+        if (user == null) {
+            throw new Exception("User không tồn tại với email đã cung cấp");
+        }
+
+//        if (!passwordEncoder.matches(password, user.getPassword())) {
+//            throw new Exception("Mật khẩu không đúng");
+//        }
 
         Authentication authentication = authenticate(username, otp);
-        User user = userRepository.findByEmail(username);
 
         if (user != null && !user.isEmailVerified()) {
             user.setEmailVerified(true);
@@ -120,7 +133,7 @@ public class AuthServiceImpl implements AuthService {
         authResponse.setMessage("Đăng nhập thành công ");
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        String roleName= authorities.isEmpty()?null:authorities.iterator().next().getAuthority();
+        String roleName = authorities.isEmpty() ? null : authorities.iterator().next().getAuthority();
 
         authResponse.setRole(USER_ROLE.valueOf(roleName));
 
@@ -167,12 +180,43 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+    @Override
+    public void sentSignOtp(String email, USER_ROLE role) throws Exception {
+        String SIGNING_PREFIX = "sign_";
+
+        if (email.startsWith(SIGNING_PREFIX)) {
+            email = email.substring(SIGNING_PREFIX.length());
+        }
+
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new Exception("User không tồn tại với email đã cung cấp");
+        }
+
+        VerificationCode existing = verificationCodeRepository.findByEmail(email);
+        if (existing != null) {
+            verificationCodeRepository.delete(existing);
+        }
+
+        String otp = OtpUtils.generateOtp();
+        VerificationCode verificationCode = new VerificationCode();
+        verificationCode.setOtp(otp);
+        verificationCode.setEmail(email);
+        verificationCodeRepository.save(verificationCode);
+
+        String subject = "Mã OTP đăng ký";
+        String text = "Mã OTP của bạn là: " + otp;
+
+        emailService.sendVerificationEmail(email, otp, subject, text);
+    }
+
     private Authentication authenticate(String username, String otp) throws Exception {
         UserDetails userDetails = customerUserService.loadUserByUsername(username);
 
 
         if(userDetails==null){
-            throw new BadCredentialsException("invalid username");
+            throw new BadCredentialsException("Tên người dùng không hợp lệ");
         }
         VerificationCode verificationCode = verificationCodeRepository.findByEmail(username);
 

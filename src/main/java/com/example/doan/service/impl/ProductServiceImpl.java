@@ -1,5 +1,6 @@
 package com.example.doan.service.impl;
 
+import com.example.doan.exceptions.DataNotFoundException;
 import com.example.doan.exceptions.ProductException;
 import com.example.doan.modal.Category;
 import com.example.doan.modal.Product;
@@ -7,7 +8,9 @@ import com.example.doan.modal.User;
 import com.example.doan.repository.CategoryRepository;
 import com.example.doan.repository.ProductRepository;
 import com.example.doan.request.CreateProductRequest;
+import com.example.doan.service.CategoryService;
 import com.example.doan.service.ProductService;
+import com.fasterxml.jackson.databind.DatabindException;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -24,38 +27,15 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ProductServiceImpl implements ProductService {
+public class ProductServiceImpl implements ProductService  {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-
     @Override
-    public Product createProduct(CreateProductRequest req, User user) {
-        Category category1 = categoryRepository.findByCategoryId(req.getCategory());
-        if (category1 == null) {
-            category1 = new Category();
-            category1.setCategoryId(req.getCategory());
-            category1.setLevel(1);
-            category1 = categoryRepository.save(category1);
-        }
+    public Product createProduct(CreateProductRequest req, User user) throws DataNotFoundException {
 
-        Category category2 = categoryRepository.findByCategoryId(req.getCategory2());
-        if (category2 == null) {
-            category2 = new Category();
-            category2.setCategoryId(req.getCategory2());
-            category2.setLevel(2);
-            category2.setParentCategory(category1);
-            category2 = categoryRepository.save(category2);
-        }
-
-        Category category3 = categoryRepository.findByCategoryId(req.getCategory3());
-        if (category3 == null) {
-            category3 = new Category();
-            category3.setCategoryId(req.getCategory3());
-            category3.setLevel(3);
-            category3.setParentCategory(category2);
-            category3 = categoryRepository.save(category3);
-        }
+        Category category = categoryRepository.findById(req.getCategoryId())
+                .orElseThrow(()-> new DataNotFoundException("Not found Category with id: " + req.getCategoryId() + " or categoryId is null"));
 
         int discountPercentage = calculateDiscountPercent(req.getPrice(), req.getDiscountPrice());
 
@@ -66,11 +46,11 @@ public class ProductServiceImpl implements ProductService {
         product.setDiscountPrice(req.getDiscountPrice());
         product.setSize(req.getSize());
         product.setBrand(req.getBrand());
-        product.setCategory(category3);
+        product.setCategory(category);
         product.setUser(user);
         product.setCreatedAt(LocalDateTime.now());
         product.setNumRatings(0);
-        product.setImages(req.getImages()); // nếu có logic ảnh riêng thì handle thêm
+        product.setImages(req.getImages());
         product.setDiscountPercent(discountPercentage);
 
         return productRepository.save(product);
@@ -138,6 +118,10 @@ public class ProductServiceImpl implements ProductService {
                         Sort.by("sellingPrice").ascending());
                 case "price_high" -> PageRequest.of(pageNumber != null ? pageNumber : 0, 10,
                         Sort.by("sellingPrice").descending());
+                case "createdAt" -> PageRequest.of(pageNumber != null ? pageNumber : 0, 10,
+                        Sort.by("createdAt").descending());
+                case "evaluate" -> PageRequest.of(pageNumber != null ? pageNumber : 0, 10,
+                        Sort.by("numRatings").descending());
                 default -> PageRequest.of(pageNumber != null ? pageNumber : 0, 10,
                         Sort.unsorted());
             };
@@ -157,4 +141,3 @@ public class ProductServiceImpl implements ProductService {
     }
 
 }
-

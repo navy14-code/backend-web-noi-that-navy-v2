@@ -12,8 +12,6 @@ public class CreateProductRequest {
     private int discountPrice;
     private String size;
     private String brand;
-    private String category;
-    private String category2;
-    private String category3;
+    private Long categoryId;
     private List<String> images;
 }

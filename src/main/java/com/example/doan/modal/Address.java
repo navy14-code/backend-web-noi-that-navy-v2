@@ -22,7 +22,7 @@ public class Address {
     private String detailAddress;
 
     @Column(name = "locality")
-    private String locality;
+    private String localCity;
 
     @Column(name = "city")
     private String city;

@@ -1,5 +1,6 @@
 package com.example.doan.controller;
 
+import com.example.doan.config.VNPayConfig;
 import com.example.doan.doman.OrderStatus;
 import com.example.doan.doman.PaymentMethod;
 import com.example.doan.doman.PaymentStatus;
@@ -7,14 +8,17 @@ import com.example.doan.doman.USER_ROLE;
 import com.example.doan.modal.*;
 import com.example.doan.response.PaymentResponse;
 import com.example.doan.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,7 +33,8 @@ public class OrderController {
     public ResponseEntity<PaymentResponse> createOrderHandler(
             @RequestBody Address shippingAddress,
             @RequestParam PaymentMethod paymentMethod,
-            @RequestHeader("Authorization") String jwt) throws Exception {
+            @RequestHeader("Authorization") String jwt,
+            HttpServletRequest request) throws Exception {
 
         User user = userService.findUserByJwtToken(jwt);
         Cart cart = cartService.findUserCart(user);
@@ -40,29 +45,83 @@ public class OrderController {
         if (paymentMethod == PaymentMethod.COD) {
             // Đặt trạng thái đơn hàng là "Chờ xử lý"
             for (Order order : orders) {
-                order.setOrderStatus(OrderStatus.PENDING);
+                order.setOrderStatus(OrderStatus.SUCCESS);
                 order.setPaymentStatus(PaymentStatus.NOT_PAID);
                 orderService.saveOrder(order); // Lưu đơn hàng vào cơ sở dữ liệu
             }
             // Trả về thông báo thành công cho thanh toán COD
             res = new PaymentResponse("Đặt hàng thành công. Thanh toán khi nhận hàng.", null); // Truyền giá trị đúng cho URL
         }
-//        else if (paymentMethod == PaymentMethod.VNPAY) {
-//            // Tạo URL thanh toán VNPAY
-//            for (Order order : orders) {
-//                order.setOrderStatus(OrderStatus.PENDING); // Đặt trạng thái đơn hàng là "Chờ xử lý"
-//                order.setPaymentStatus(PaymentStatus.PENDING); // Thanh toán chờ xử lý
-//
-//                // Tạo URL thanh toán từ dịch vụ VNPAY
-//                String paymentUrl = vnPayService.createPaymentUrl(order); // Giả sử bạn có service `vnPayService` để tạo URL thanh toán
-//
-//                order.setPaymentUrl(paymentUrl); // Lưu URL thanh toán vào đơn hàng
-//                orderService.saveOrder(order); // Lưu đơn hàng vào cơ sở dữ liệu
-//            }
-//            // Trả về URL thanh toán VNPAY
-//            res = new PaymentResponse("Vui lòng thanh toán qua VNPAY.", paymentUrl); // Trả về URL thanh toán VNPAY
-//        }
-        // Nếu phương thức thanh toán không hợp lệ, trả về lỗi
+        else if (paymentMethod == PaymentMethod.VNPAY) {
+            // Đặt trạng thái đơn hàng là "Chờ thanh toán"
+            for (Order order : orders) {
+                order.setOrderStatus(OrderStatus.SUCCESS);
+                order.setPaymentStatus(PaymentStatus.NOT_PAID);
+                orderService.saveOrder(order);
+            }
+            // --- Tạo URL thanh toán từ VNPayConfig ---
+            BigDecimal totalAmount = BigDecimal.ZERO;
+            for (Order order : orders) {
+                totalAmount = totalAmount.add(BigDecimal.valueOf(order.getTotalPrice()));
+            }
+            BigDecimal amount = totalAmount.multiply(BigDecimal.valueOf(100));
+            String orderType = "other";
+            String vnp_TxnRef = VNPayConfig.getRandomNumber(8);
+            String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
+
+            Map<String, String> vnp_Params = new HashMap<>();
+            vnp_Params.put("vnp_Version", VNPayConfig.vnp_Version);
+            vnp_Params.put("vnp_Command", VNPayConfig.vnp_Command);
+            vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+            vnp_Params.put("vnp_Amount", String.valueOf(amount.longValue()));
+            vnp_Params.put("vnp_CurrCode", "VND");
+            vnp_Params.put("vnp_BankCode", "NCB");
+            vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+            vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang");
+            vnp_Params.put("vnp_OrderType", orderType);
+            vnp_Params.put("vnp_Locale", "vn");
+            vnp_Params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl);
+            vnp_Params.put("vnp_IpAddr", VNPayConfig.getIpAddress(request));
+
+            Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+            String vnp_CreateDate = formatter.format(cld.getTime());
+            vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+
+            cld.add(Calendar.MINUTE, 15);
+            String vnp_ExpireDate = formatter.format(cld.getTime());
+            vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+
+            List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+            Collections.sort(fieldNames);
+
+            StringBuilder hashData = new StringBuilder();
+            StringBuilder query = new StringBuilder();
+
+            for (int i = 0; i < fieldNames.size(); i++) {
+                String key = fieldNames.get(i);
+                String value = vnp_Params.get(key);
+
+                if (value != null && !value.isEmpty()) {
+                    hashData.append(key).append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII.toString()));
+                    query.append(URLEncoder.encode(key, StandardCharsets.US_ASCII.toString()))
+                            .append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII.toString()));
+
+                    if (i < fieldNames.size() - 1) {
+                        hashData.append('&');
+                        query.append('&');
+                    }
+                }
+            }
+
+            String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.secretKey, hashData.toString());
+            query.append("&vnp_SecureHash=").append(vnp_SecureHash);
+
+            String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + query;
+
+            res = new PaymentResponse("Chuyển hướng đến trang thanh toán VNPAY", paymentUrl);
+            return new ResponseEntity<>(res, HttpStatus.OK); // Trả về ngay sau khi tạo UR
+        }
         else {
             res = new PaymentResponse("Phương thức thanh toán không hợp lệ", null);
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST); // Trả về mã lỗi 400
@@ -71,23 +130,6 @@ public class OrderController {
         return new ResponseEntity<>(res, HttpStatus.OK);
 
     }
-//    @PostMapping("/vnpay-return")
-//    public ResponseEntity<String> handleVNPayCallback(@RequestParam Map<String, String> params) throws Exception {
-//        String vnp_ResponseCode = params.get("vnp_ResponseCode");
-//        Long orderId = Long.valueOf(params.get("vnp_TxnRef")); // Lấy ID đơn hàng từ callback
-//
-//        Order order = orderService.findOrderById(orderId);
-//        if ("00".equals(vnp_ResponseCode)) { // "00" là mã phản hồi thành công
-//            order.setPaymentStatus(PaymentStatus.PROCESSING);
-//            order.setOrderStatus(OrderStatus.CONFIRMED);
-//        } else {
-//            order.setPaymentStatus(PaymentStatus.FAILED);
-//        }
-//        orderService.saveOrder(order); // Lưu thay đổi vào DB
-//        return ResponseEntity.ok("Payment status updated.");
-//    }
-
-
     @GetMapping("/user")
     public ResponseEntity<List<Order>> userOrdersHistoryHandler(
             @RequestHeader("Authorization") String jwt) throws Exception {

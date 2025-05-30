@@ -79,7 +79,6 @@ public class CartServiceImpl implements CartService {
     private int calculateDiscountPercent(int price, int discountPrice  ) {
         if(price <= 0) {
             return 0;
-//            throw new IllegalArgumentException("Giá thực tế phải lớn hơn 0");
         }
         double discount = price - discountPrice;
         double discountPercent =(discount/price)*100;

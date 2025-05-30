@@ -10,6 +10,9 @@ import com.example.doan.repository.UserRepository;
 import com.example.doan.request.UserRequest;
 import com.example.doan.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -115,8 +118,8 @@ public class UserServiceImpl implements UserService {
             if (newAddress.getPhone() != null)
                 existingAddress.setPhone(newAddress.getPhone());
 
-            if (newAddress.getLocality() != null)
-                existingAddress.setLocality(newAddress.getLocality());
+            if (newAddress.getLocalCity() != null)
+                existingAddress.setLocalCity(newAddress.getLocalCity());
 
             if (newAddress.getName() != null)
                 existingAddress.setName(newAddress.getName());
@@ -141,5 +144,13 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllCustomers(USER_ROLE role) {
         return userRepository.getByRole(USER_ROLE.ROLE_CUSTOMER);
     }
+
+    @Override
+    public Page<User> findAllByRoleCustomer(USER_ROLE role, int page, int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size); // Create pagination object
+        return userRepository.findAllByRole(role, pageable);
+    }
+
 
 }
